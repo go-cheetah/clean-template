@@ -1,0 +1,38 @@
+package infra
+
+import (
+	"{{ .Title }}/internal/module/user/domain"
+	"{{ .Title }}/internal/module/user/infra/model"
+)
+
+// toModel 把领域实体转换成数据库模型。
+func toModel(u *domain.User) *model.UserModel {
+	return &model.UserModel{
+		ID:        u.ID,
+		Name:      u.Name,
+		Email:     u.Email,
+		Status:    int(u.Status),
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
+}
+
+// toDomain 把数据库模型转换成领域实体。
+func toDomain(m *model.UserModel) *domain.User {
+	return &domain.User{
+		ID:        m.ID,
+		Name:      m.Name,
+		Email:     m.Email,
+		Status:    domain.Status(m.Status),
+		CreatedAt: m.CreatedAt,
+		UpdatedAt: m.UpdatedAt,
+	}
+}
+
+func toDomainList(models []model.UserModel) []*domain.User {
+	users := make([]*domain.User, len(models))
+	for i, item := range models {
+		users[i] = toDomain(&item)
+	}
+	return users
+}

@@ -1,0 +1,79 @@
+package options
+
+import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/gin-gonic/gin"
+
+	"{{ .Title }}/internal/app"
+	"{{ .Title }}/internal/config"
+	"{{ .Title }}/pkg/database"
+	"{{ .Title }}/pkg/log"
+)
+
+// AppOptions 负责承接启动参数，并组装应用所需依赖。
+type AppOptions struct {
+	ConfFile string
+	Config   *config.Config
+}
+
+func NewAppOptions() *AppOptions {
+	return &AppOptions{}
+}
+
+// NewServer 兼容当前模板家族的命名习惯，返回装配后的 App。
+func (o *AppOptions) NewServer() (*app.App, error) {
+	instance := app.New()
+	o.loadConfig(o.ConfFile)
+	instance.Config = o.Config
+
+	gin.SetMode(instance.Config.Server.Mode)
+	instance.Gin = gin.New()
+
+	instance.Log = log.NewClient(
+		o.Config.Log.InfoFilePath,
+		o.Config.Log.ErrorFilePath,
+		o.Config.Log.Level,
+		o.Config.Log.MaxSize,
+		o.Config.Log.MaxBackups,
+		o.Config.Log.MaxAge,
+	)
+
+	var connStr string
+	if o.Config.DB.Type == "sqlite" {
+		connStr = o.Config.DB.Sqlite.Path
+	} else {
+		connStr = fmt.Sprintf(
+			"%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
+			o.Config.DB.Mysql.User,
+			o.Config.DB.Mysql.Password,
+			o.Config.DB.Mysql.Host,
+			o.Config.DB.Mysql.Port,
+			o.Config.DB.Mysql.Database,
+			o.Config.DB.Mysql.Charset,
+		)
+	}
+
+	db, err := database.New(o.Config.DB.Type, connStr, database.WithMigrate(true))
+	if err != nil {
+		return nil, err
+	}
+	instance.DB = db
+
+	return instance, nil
+}
+
+func (o *AppOptions) loadConfig(configFile string) {
+	o.Config = config.New(configFile)
+	if o.Config.Log.Path == "" {
+		o.Config.Log.Path = "./log"
+	}
+	absPath, err := filepath.Abs(o.Config.Log.Path)
+	if err != nil {
+		fmt.Printf("转换失败: %v\n", err)
+		absPath = o.Config.Log.Path
+	}
+	o.Config.Log.ErrorFilePath = absPath + "/" + o.Config.Log.ErrorFilename
+	o.Config.Log.InfoFilePath = absPath + "/" + o.Config.Log.InfoFilename
+}

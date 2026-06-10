@@ -1,0 +1,75 @@
+package application
+
+import (
+	"context"
+	"errors"
+
+	"{{ .Title }}/internal/module/user/domain"
+)
+
+// Service 表示 user 模块的应用层服务。
+// 它负责组织用例流程，不直接关心 GORM 等实现细节。
+type Service struct {
+	repo domain.UserRepository
+}
+
+func NewService(repo domain.UserRepository) *Service {
+	return &Service{repo: repo}
+}
+
+// Create 创建用户。
+func (s *Service) Create(ctx context.Context, name, email string) (*domain.User, error) {
+	existing, _ := s.repo.FindByEmail(ctx, email)
+	if existing != nil {
+		return nil, errors.New("email already exists")
+	}
+
+	user := &domain.User{
+		Name:   name,
+		Email:  email,
+		Status: domain.StatusActive,
+	}
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
+	return s.repo.Save(ctx, user)
+}
+
+// GetByID 查询单个用户。
+func (s *Service) GetByID(ctx context.Context, id int64) (*domain.User, error) {
+	return s.repo.FindByID(ctx, id)
+}
+
+// Update 更新用户。
+func (s *Service) Update(ctx context.Context, id int64, name, email string) (*domain.User, error) {
+	user, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Name = name
+	user.Email = email
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
+	return s.repo.Update(ctx, user)
+}
+
+// Delete 删除用户。
+func (s *Service) Delete(ctx context.Context, id int64) error {
+	return s.repo.Delete(ctx, id)
+}
+
+// List 分页查询用户列表。
+func (s *Service) List(ctx context.Context, page, pageSize int) ([]*domain.User, int64, error) {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	return s.repo.List(ctx, page, pageSize)
+}

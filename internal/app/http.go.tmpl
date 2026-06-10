@@ -1,0 +1,27 @@
+package app
+
+import (
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	userModule "{{ .Title }}/internal/module/user"
+
+	_ "{{ .Title }}/docs"
+)
+
+// registerHTTPRoutes 统一挂载所有 HTTP 路由。
+// 应用层只负责装配和注册，不处理具体业务逻辑。
+func (a *App) registerHTTPRoutes() {
+	a.Gin.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+
+	v1 := a.Gin.Group("/api/v1")
+
+	userModule.RegisterHTTP(v1, userModule.Dependencies{
+		DB: a.DB.GetDB(),
+	})
+
+	a.Gin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+}

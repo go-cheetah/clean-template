@@ -1,0 +1,30 @@
+package user
+
+import (
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+
+	"{{ .Title }}/internal/module/user/api"
+	"{{ .Title }}/internal/module/user/application"
+	"{{ .Title }}/internal/module/user/infra"
+	"{{ .Title }}/internal/pkg/migration"
+)
+
+// Dependencies 表示 user 模块对外部基础设施的依赖。
+type Dependencies struct {
+	DB *gorm.DB
+}
+
+// RegisterHTTP 装配 user 模块自己的 repo、service、handler，并注册路由。
+func RegisterHTTP(rg *gin.RouterGroup, dep Dependencies) {
+	repo := infra.NewUserRepository(dep.DB)
+	service := application.NewService(repo)
+	handler := api.NewHandler(service)
+
+	api.RegisterRoutes(rg, handler)
+}
+
+// RegisterMigrations 注册 user 模块自己的数据库迁移。
+func RegisterMigrations(registry *migration.MigrationRegistry) {
+	infra.RegisterMigrations(registry)
+}

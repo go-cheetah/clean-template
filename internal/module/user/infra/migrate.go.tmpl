@@ -1,0 +1,21 @@
+package infra
+
+import (
+	"gorm.io/gorm"
+
+	"{{ .Title }}/internal/module/user/infra/model"
+	"{{ .Title }}/internal/pkg/migration"
+)
+
+// RegisterMigrations 注册 user 模块自己的迁移。
+func RegisterMigrations(registry *migration.MigrationRegistry) {
+	registry.Register("20240101001", "create_users_table", createUserTable, dropUserTable)
+}
+
+func createUserTable(db *gorm.DB) error {
+	return db.AutoMigrate(&model.UserModel{})
+}
+
+func dropUserTable(db *gorm.DB) error {
+	return db.Migrator().DropTable(&model.UserModel{})
+}

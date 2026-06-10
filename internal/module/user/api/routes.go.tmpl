@@ -1,0 +1,15 @@
+package api
+
+import "github.com/gin-gonic/gin"
+
+// RegisterRoutes 只负责声明 user 模块自己的路由。
+func RegisterRoutes(rg *gin.RouterGroup, handler *Handler) {
+	users := rg.Group("/users")
+	{
+		users.POST("", handler.Create)
+		users.GET("", handler.List)
+		users.GET("/:id", handler.GetByID)
+		users.PUT("/:id", handler.Update)
+		users.DELETE("/:id", handler.Delete)
+	}
+}

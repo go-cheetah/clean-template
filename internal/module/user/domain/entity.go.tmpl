@@ -1,0 +1,46 @@
+package domain
+
+import (
+	"errors"
+	"time"
+)
+
+// Status 表示用户状态。
+type Status int
+
+const (
+	StatusInactive Status = 0
+	StatusActive   Status = 1
+	StatusDeleted  Status = 2
+)
+
+// User 是 user 模块的领域实体。
+// 这里不关心 HTTP、数据库模型、GORM 标签等技术细节。
+type User struct {
+	ID        int64
+	Name      string
+	Email     string
+	Status    Status
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// Validate 负责最基础的业务规则校验。
+func (u *User) Validate() error {
+	if u.Name == "" {
+		return errors.New("name is required")
+	}
+	if u.Email == "" {
+		return errors.New("email is required")
+	}
+	return nil
+}
+
+// Activate 激活用户。
+func (u *User) Activate() error {
+	if u.Status == StatusDeleted {
+		return errors.New("cannot activate deleted user")
+	}
+	u.Status = StatusActive
+	return nil
+}

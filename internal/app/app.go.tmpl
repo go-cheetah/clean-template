@@ -1,0 +1,64 @@
+package app
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/gin-gonic/gin"
+
+	"{{ .Title }}/internal/config"
+	userModule "{{ .Title }}/internal/module/user"
+	"{{ .Title }}/internal/pkg/migration"
+	"{{ .Title }}/pkg/cors"
+	"{{ .Title }}/pkg/database"
+	"{{ .Title }}/pkg/log"
+)
+
+// App 是应用级装配对象。
+// 它负责承接配置、基础设施对象以及启动流程。
+type App struct {
+	Config *config.Config
+	Gin    *gin.Engine
+	Log    *log.Client
+	DB     database.DB
+}
+
+func New() *App {
+	return &App{}
+}
+
+// Run 启动整个应用。
+func (a *App) Run() {
+	c := cors.New(cors.Config{
+		AllowOrigins:     a.Config.Server.Origins,
+		AllowMethods:     a.Config.Server.Methods,
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	})
+
+	a.Gin.Use(
+		log.GinLogger(a.Log.Logger),
+		log.GinRecovery(a.Log.Logger, true),
+		c,
+	)
+
+	a.runMigrations()
+	a.registerHTTPRoutes()
+
+	if err := a.Gin.Run(a.Config.Server.Bind + ":" + a.Config.Server.Port); err != nil {
+		fmt.Println(err)
+	}
+}
+
+// runMigrations 在启动时统一执行模块迁移。
+func (a *App) runMigrations() {
+	registry := migration.NewMigrationRegistry()
+
+	userModule.RegisterMigrations(registry)
+
+	if err := migration.RunMigrations(a.DB.GetDB(), registry); err != nil {
+		fmt.Printf("migrate failed: %v\n", err)
+	}
+}

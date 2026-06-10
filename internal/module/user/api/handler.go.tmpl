@@ -1,0 +1,112 @@
+package api
+
+import (
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+
+	"{{ .Title }}/internal/module/user/application"
+	"{{ .Title }}/internal/pkg/response"
+)
+
+// Handler 是 user 模块的 HTTP 入口。
+// 它只负责收参数、调应用层、回响应。
+type Handler struct {
+	service *application.Service
+}
+
+func NewHandler(service *application.Service) *Handler {
+	return &Handler{service: service}
+}
+
+// Create 创建用户。
+func (h *Handler) Create(c *gin.Context) {
+	var req CreateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, response.Error(response.ErrCodeParameter))
+		return
+	}
+
+	result, err := h.service.Create(c.Request.Context(), req.Name, req.Email)
+	if err != nil {
+		c.JSON(500, response.ErrorUnknown(response.ErrSQL, err.Error()))
+		return
+	}
+
+	c.JSON(200, response.Success(toResponse(result)))
+}
+
+// GetByID 根据主键查询用户。
+func (h *Handler) GetByID(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(400, response.Error(response.ErrCodeParameter))
+		return
+	}
+
+	result, err := h.service.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(500, response.ErrorUnknown(response.ErrSQL, err.Error()))
+		return
+	}
+
+	c.JSON(200, response.Success(toResponse(result)))
+}
+
+// List 查询用户列表。
+func (h *Handler) List(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+
+	list, total, err := h.service.List(c.Request.Context(), page, pageSize)
+	if err != nil {
+		c.JSON(500, response.ErrorUnknown(response.ErrSQL, err.Error()))
+		return
+	}
+
+	c.JSON(200, response.Success(&ListUserResponse{
+		List:     toResponseList(list),
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+	}))
+}
+
+// Update 更新用户。
+func (h *Handler) Update(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(400, response.Error(response.ErrCodeParameter))
+		return
+	}
+
+	var req UpdateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, response.Error(response.ErrCodeParameter))
+		return
+	}
+
+	result, err := h.service.Update(c.Request.Context(), id, req.Name, req.Email)
+	if err != nil {
+		c.JSON(500, response.ErrorUnknown(response.ErrSQL, err.Error()))
+		return
+	}
+
+	c.JSON(200, response.Success(toResponse(result)))
+}
+
+// Delete 删除用户。
+func (h *Handler) Delete(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(400, response.Error(response.ErrCodeParameter))
+		return
+	}
+
+	if err := h.service.Delete(c.Request.Context(), id); err != nil {
+		c.JSON(500, response.ErrorUnknown(response.ErrSQL, err.Error()))
+		return
+	}
+
+	c.JSON(200, response.Success(nil))
+}

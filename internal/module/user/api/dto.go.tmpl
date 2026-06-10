@@ -1,0 +1,48 @@
+package api
+
+import "{{ .Title }}/internal/module/user/domain"
+
+// CreateUserRequest 表示创建用户的 HTTP 入参。
+type CreateUserRequest struct {
+	Name  string `json:"name" binding:"required"`
+	Email string `json:"email" binding:"required"`
+}
+
+// UpdateUserRequest 表示更新用户的 HTTP 入参。
+type UpdateUserRequest struct {
+	Name  string `json:"name" binding:"required"`
+	Email string `json:"email" binding:"required"`
+}
+
+// UserResponse 表示单个用户的响应体。
+type UserResponse struct {
+	ID     int64  `json:"id"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Status int    `json:"status"`
+}
+
+// ListUserResponse 表示列表响应。
+type ListUserResponse struct {
+	List     []*UserResponse `json:"list"`
+	Total    int64           `json:"total"`
+	Page     int             `json:"page"`
+	PageSize int             `json:"pageSize"`
+}
+
+func toResponse(u *domain.User) *UserResponse {
+	return &UserResponse{
+		ID:     u.ID,
+		Name:   u.Name,
+		Email:  u.Email,
+		Status: int(u.Status),
+	}
+}
+
+func toResponseList(users []*domain.User) []*UserResponse {
+	result := make([]*UserResponse, len(users))
+	for i, user := range users {
+		result[i] = toResponse(user)
+	}
+	return result
+}

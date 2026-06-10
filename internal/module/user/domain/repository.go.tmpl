@@ -1,0 +1,14 @@
+package domain
+
+import "context"
+
+// UserRepository 定义 user 模块需要的持久化能力。
+// 领域层只依赖接口，不依赖 GORM 实现。
+type UserRepository interface {
+	Save(ctx context.Context, user *User) (*User, error)
+	FindByID(ctx context.Context, id int64) (*User, error)
+	FindByEmail(ctx context.Context, email string) (*User, error)
+	Update(ctx context.Context, user *User) (*User, error)
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context, page, pageSize int) ([]*User, int64, error)
+}
