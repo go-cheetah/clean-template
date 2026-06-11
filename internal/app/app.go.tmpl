@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -28,7 +27,7 @@ func New() *App {
 }
 
 // Run 启动整个应用。
-func (a *App) Run() {
+func (a *App) Run() error {
 	c := cors.New(cors.Config{
 		AllowOrigins:     a.Config.Server.Origins,
 		AllowMethods:     a.Config.Server.Methods,
@@ -44,21 +43,34 @@ func (a *App) Run() {
 		c,
 	)
 
-	a.runMigrations()
+	if err := a.runMigrations(); err != nil {
+		return err
+	}
 	a.registerHTTPRoutes()
 
 	if err := a.Gin.Run(a.Config.Server.Bind + ":" + a.Config.Server.Port); err != nil {
-		fmt.Println(err)
+		return err
 	}
+	return nil
 }
 
 // runMigrations 在启动时统一执行模块迁移。
-func (a *App) runMigrations() {
+func (a *App) runMigrations() error {
+	return migration.RunMigrations(a.DB.GetDB(), a.buildMigrationRegistry())
+}
+
+func (a *App) Migrate() error {
+	return migration.RunMigrations(a.DB.GetDB(), a.buildMigrationRegistry())
+}
+
+func (a *App) RollbackMigration(version string) error {
+	return migration.RollbackMigration(a.DB.GetDB(), a.buildMigrationRegistry(), version)
+}
+
+func (a *App) buildMigrationRegistry() *migration.MigrationRegistry {
 	registry := migration.NewMigrationRegistry()
 
 	userModule.RegisterMigrations(registry)
 
-	if err := migration.RunMigrations(a.DB.GetDB(), registry); err != nil {
-		fmt.Printf("migrate failed: %v\n", err)
-	}
+	return registry
 }
