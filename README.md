@@ -45,7 +45,6 @@
 │   │   └── user
 │   │       ├── api
 │   │       │   ├── dto.go.tmpl
-│   │       │   ├── error_mapper.go.tmpl
 │   │       │   ├── handler.go.tmpl
 │   │       │   ├── res
 │   │       │   │   └── response_code.go.tmpl
@@ -109,6 +108,7 @@
 - HTTP 层统一返回 `200`
 - 业务成功失败通过 `internal/pkg/response` 的 `code / message / data` 表达
 - 每个模块可以在自己的 `api/res/response_code.go` 注册业务错误码
+- 简单模块可以直接在 handler 里返回业务码，只有在复用价值明显时再抽错误映射
 
 ## 启动流程
 
