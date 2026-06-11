@@ -1,0 +1,123 @@
+package mock
+
+import (
+	"context"
+	"sync"
+
+	"{{ .Title }}/internal/module/user/domain"
+)
+
+type UserRepository struct {
+	mu     sync.RWMutex
+	nextID int64
+	items  map[int64]*domain.User
+}
+
+// NewUserRepository 返回一个基于内存的仓储实现，适合单测或本地演示。
+func NewUserRepository() domain.UserRepository {
+	return &UserRepository{
+		nextID: 1,
+		items:  make(map[int64]*domain.User),
+	}
+}
+
+func (r *UserRepository) Save(_ context.Context, user *domain.User) (*domain.User, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	saved := cloneUser(user)
+	saved.ID = r.nextID
+	r.nextID++
+	r.items[saved.ID] = saved
+
+	return cloneUser(saved), nil
+}
+
+func (r *UserRepository) FindByID(_ context.Context, id int64) (*domain.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	user, ok := r.items[id]
+	if !ok {
+		return nil, domain.ErrUserNotFound
+	}
+
+	return cloneUser(user), nil
+}
+
+func (r *UserRepository) FindByEmail(_ context.Context, email string) (*domain.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, user := range r.items {
+		if user.Email == email {
+			return cloneUser(user), nil
+		}
+	}
+
+	return nil, domain.ErrUserNotFound
+}
+
+func (r *UserRepository) Update(_ context.Context, user *domain.User) (*domain.User, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, ok := r.items[user.ID]; !ok {
+		return nil, domain.ErrUserNotFound
+	}
+
+	updated := cloneUser(user)
+	r.items[user.ID] = updated
+	return cloneUser(updated), nil
+}
+
+func (r *UserRepository) Delete(_ context.Context, id int64) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, ok := r.items[id]; !ok {
+		return domain.ErrUserNotFound
+	}
+
+	delete(r.items, id)
+	return nil
+}
+
+func (r *UserRepository) List(_ context.Context, page, pageSize int) ([]*domain.User, int64, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	all := make([]*domain.User, 0, len(r.items))
+	for _, user := range r.items {
+		all = append(all, cloneUser(user))
+	}
+
+	total := int64(len(all))
+	start := (page - 1) * pageSize
+	if start >= len(all) {
+		return []*domain.User{}, total, nil
+	}
+
+	end := start + pageSize
+	if end > len(all) {
+		end = len(all)
+	}
+
+	return all[start:end], total, nil
+}
+
+func cloneUser(user *domain.User) *domain.User {
+	if user == nil {
+		return nil
+	}
+
+	copy := *user
+	return &copy
+}

@@ -63,6 +63,8 @@
 │   │       │   ├── repository_gorm.go.tmpl
 │   │       │   └── model
 │   │       │       └── user.go.tmpl
+│   │       ├── mock
+│   │       │   └── repository.go.tmpl
 │   │       └── module.go.tmpl
 │   └── pkg
 │       ├── migration
@@ -90,6 +92,7 @@
 - `application`：用例编排
 - `domain`：业务实体、规则、仓储接口
 - `infra`：数据库模型、仓储实现、迁移
+- `mock`：面向单元测试的内存版仓储替身
 
 ### 3. 组合根在 `internal/app`
 
@@ -134,6 +137,7 @@ internal/module/server/
 ├── application
 ├── domain
 ├── infra
+├── mock
 └── module.go
 ```
 

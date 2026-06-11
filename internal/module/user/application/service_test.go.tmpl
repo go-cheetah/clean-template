@@ -1,0 +1,120 @@
+package application
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"{{ .Title }}/internal/module/user/domain"
+	userMock "{{ .Title }}/internal/module/user/mock"
+)
+
+func TestServiceCreateAndGetByID(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(userMock.NewUserRepository())
+
+	created, err := service.Create(context.Background(), "alice", "alice@example.com")
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	if created.ID == 0 {
+		t.Fatalf("Create() id = 0, want non-zero")
+	}
+	if created.Status != domain.StatusActive {
+		t.Fatalf("Create() status = %v, want %v", created.Status, domain.StatusActive)
+	}
+
+	got, err := service.GetByID(context.Background(), created.ID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if got.Name != "alice" {
+		t.Fatalf("GetByID() name = %q, want %q", got.Name, "alice")
+	}
+	if got.Email != "alice@example.com" {
+		t.Fatalf("GetByID() email = %q, want %q", got.Email, "alice@example.com")
+	}
+}
+
+func TestServiceCreateDuplicateEmail(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(userMock.NewUserRepository())
+
+	if _, err := service.Create(context.Background(), "alice", "alice@example.com"); err != nil {
+		t.Fatalf("first Create() error = %v", err)
+	}
+
+	_, err := service.Create(context.Background(), "bob", "alice@example.com")
+	if !errors.Is(err, ErrUserAlreadyExists) {
+		t.Fatalf("second Create() error = %v, want %v", err, ErrUserAlreadyExists)
+	}
+}
+
+func TestServiceUpdateAndDelete(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(userMock.NewUserRepository())
+
+	created, err := service.Create(context.Background(), "alice", "alice@example.com")
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	updated, err := service.Update(context.Background(), created.ID, "alice-updated", "alice-updated@example.com")
+	if err != nil {
+		t.Fatalf("Update() error = %v", err)
+	}
+	if updated.Name != "alice-updated" {
+		t.Fatalf("Update() name = %q, want %q", updated.Name, "alice-updated")
+	}
+	if updated.Email != "alice-updated@example.com" {
+		t.Fatalf("Update() email = %q, want %q", updated.Email, "alice-updated@example.com")
+	}
+
+	if err := service.Delete(context.Background(), created.ID); err != nil {
+		t.Fatalf("Delete() error = %v", err)
+	}
+
+	_, err = service.GetByID(context.Background(), created.ID)
+	if !errors.Is(err, domain.ErrUserNotFound) {
+		t.Fatalf("GetByID() after Delete() error = %v, want %v", err, domain.ErrUserNotFound)
+	}
+}
+
+func TestServiceList(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(userMock.NewUserRepository())
+
+	for i := 0; i < 3; i++ {
+		email := "user" + string(rune('a'+i)) + "@example.com"
+		name := "user" + string(rune('a'+i))
+		if _, err := service.Create(context.Background(), name, email); err != nil {
+			t.Fatalf("Create() #%d error = %v", i+1, err)
+		}
+	}
+
+	list, total, err := service.List(context.Background(), 1, 2)
+	if err != nil {
+		t.Fatalf("List() error = %v", err)
+	}
+	if total != 3 {
+		t.Fatalf("List() total = %d, want %d", total, 3)
+	}
+	if len(list) != 2 {
+		t.Fatalf("List() len = %d, want %d", len(list), 2)
+	}
+
+	list, total, err = service.List(context.Background(), 0, 0)
+	if err != nil {
+		t.Fatalf("List() with default pagination error = %v", err)
+	}
+	if total != 3 {
+		t.Fatalf("List() with default pagination total = %d, want %d", total, 3)
+	}
+	if len(list) != 3 {
+		t.Fatalf("List() with default pagination len = %d, want %d", len(list), 3)
+	}
+}
