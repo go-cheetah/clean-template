@@ -1,9 +1,6 @@
 package domain
 
-import (
-	"errors"
-	"time"
-)
+import "time"
 
 // Status 表示用户状态。
 type Status int
@@ -28,10 +25,10 @@ type User struct {
 // Validate 负责最基础的业务规则校验。
 func (u *User) Validate() error {
 	if u.Name == "" {
-		return errors.New("name is required")
+		return ErrUserNameRequired
 	}
 	if u.Email == "" {
-		return errors.New("email is required")
+		return ErrUserEmailRequired
 	}
 	return nil
 }
@@ -39,7 +36,7 @@ func (u *User) Validate() error {
 // Activate 激活用户。
 func (u *User) Activate() error {
 	if u.Status == StatusDeleted {
-		return errors.New("cannot activate deleted user")
+		return ErrUserDeleted
 	}
 	u.Status = StatusActive
 	return nil

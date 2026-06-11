@@ -45,12 +45,17 @@
 │   │   └── user
 │   │       ├── api
 │   │       │   ├── dto.go.tmpl
+│   │       │   ├── error_mapper.go.tmpl
 │   │       │   ├── handler.go.tmpl
+│   │       │   ├── res
+│   │       │   │   └── response_code.go.tmpl
 │   │       │   └── routes.go.tmpl
 │   │       ├── application
+│   │       │   ├── errors.go.tmpl
 │   │       │   └── service.go.tmpl
 │   │       ├── domain
 │   │       │   ├── entity.go.tmpl
+│   │       │   ├── errors.go.tmpl
 │   │       │   └── repository.go.tmpl
 │   │       ├── infra
 │   │       │   ├── mapper.go.tmpl
@@ -95,6 +100,12 @@
 
 这个模板不会强制你给每个动作都建一层，也不会要求你把值对象、领域事件一口气全上。  
 先把边界立住，比术语更重要。
+
+### 5. 返回值和错误码统一
+
+- HTTP 层统一返回 `200`
+- 业务成功失败通过 `internal/pkg/response` 的 `code / message / data` 表达
+- 每个模块可以在自己的 `api/res/response_code.go` 注册业务错误码
 
 ## 启动流程
 

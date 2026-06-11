@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 
 	"{{ .Title }}/internal/module/user/api"
+	userRes "{{ .Title }}/internal/module/user/api/res"
 	"{{ .Title }}/internal/module/user/application"
 	"{{ .Title }}/internal/module/user/infra"
 	"{{ .Title }}/internal/pkg/migration"
@@ -17,6 +18,8 @@ type Dependencies struct {
 
 // RegisterHTTP 装配 user 模块自己的 repo、service、handler，并注册路由。
 func RegisterHTTP(rg *gin.RouterGroup, dep Dependencies) {
+	userRes.RegisterCode()
+
 	repo := infra.NewUserRepository(dep.DB)
 	service := application.NewService(repo)
 	handler := api.NewHandler(service)

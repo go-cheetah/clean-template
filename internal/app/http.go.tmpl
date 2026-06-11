@@ -1,11 +1,14 @@
 package app
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	userModule "{{ .Title }}/internal/module/user"
+	"{{ .Title }}/internal/pkg/response"
 
 	_ "{{ .Title }}/docs"
 )
@@ -14,7 +17,7 @@ import (
 // 应用层只负责装配和注册，不处理具体业务逻辑。
 func (a *App) registerHTTPRoutes() {
 	a.Gin.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
+		c.JSON(http.StatusOK, response.Success("ok"))
 	})
 
 	v1 := a.Gin.Group("/api/v1")

@@ -1,0 +1,26 @@
+package api
+
+import (
+	"errors"
+
+	"{{ .Title }}/internal/module/user/api/res"
+	"{{ .Title }}/internal/module/user/application"
+	"{{ .Title }}/internal/module/user/domain"
+	"{{ .Title }}/internal/pkg/response"
+)
+
+// mapError 负责把业务错误转换为统一响应码。
+func mapError(err error) response.Response {
+	switch {
+	case errors.Is(err, application.ErrUserAlreadyExists):
+		return response.Error(res.ErrUserAlreadyExists)
+	case errors.Is(err, domain.ErrUserNotFound):
+		return response.Error(res.ErrUserNotFound)
+	case errors.Is(err, domain.ErrUserNameRequired):
+		return response.Error(res.ErrUserNameRequired)
+	case errors.Is(err, domain.ErrUserEmailRequired):
+		return response.Error(res.ErrUserEmailRequired)
+	default:
+		return response.ErrorUnknown(response.ErrSQL, err.Error())
+	}
+}
