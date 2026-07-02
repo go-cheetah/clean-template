@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"{{ .Title }}/internal/config"
 	"{{ .Title }}/internal/module/user/api"
 	userRes "{{ .Title }}/internal/module/user/api/res"
 	"{{ .Title }}/internal/module/user/application"
@@ -13,7 +14,8 @@ import (
 
 // Dependencies 表示 user 模块对外部基础设施的依赖。
 type Dependencies struct {
-	DB *gorm.DB
+	DB     *gorm.DB
+	Config *config.Config
 }
 
 // RegisterHTTP 装配 user 模块自己的 repo、service、handler，并注册路由。
@@ -21,7 +23,8 @@ func RegisterHTTP(rg *gin.RouterGroup, dep Dependencies) {
 	userRes.RegisterCode()
 
 	repo := infra.NewUserRepository(dep.DB)
-	service := application.NewService(repo)
+	service := application.NewService(repo, dep.Config)
+
 	handler := api.NewHandler(service)
 
 	api.RegisterRoutes(rg, handler)
