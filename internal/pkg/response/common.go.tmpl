@@ -11,7 +11,7 @@ var (
 const (
 	CodeSuccess      = 0
 	ErrCodeParameter = 41001
-	ErrSQL           = 50000
+	ErrUnknow        = 50000
 )
 
 func Init() {
@@ -24,7 +24,7 @@ func Init() {
 func baseRes(msg map[int]string) map[int]string {
 	msg[CodeSuccess] = "success"
 	msg[ErrCodeParameter] = "参数错误"
-	msg[ErrSQL] = "sql错误"
+	msg[ErrUnknow] = "后端错误"
 	return msg
 }
 
