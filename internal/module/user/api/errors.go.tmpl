@@ -1,0 +1,43 @@
+package api
+
+import (
+	"errors"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	"{{ .Title }}/internal/module/user/api/res"
+	"{{ .Title }}/internal/module/user/application"
+	"{{ .Title }}/internal/module/user/domain"
+	"{{ .Title }}/internal/pkg/response"
+)
+
+type ErrorCoder func(err error) int
+
+func errorToCode(err error) (code int) {
+	if err != nil {
+		switch {
+		case errors.Is(err, application.ErrUserAlreadyExists):
+			return res.ErrUserAlreadyExists
+		case errors.Is(err, domain.ErrUserNotFound):
+			return res.ErrUserNotFound
+		case errors.Is(err, domain.ErrUserNameRequired):
+			return res.ErrUserNameRequired
+		case errors.Is(err, domain.ErrUserEmailRequired):
+			return res.ErrUserEmailRequired
+		default:
+			return response.ErrUnknow
+		}
+	}
+	return 0
+}
+
+func writeError(c *gin.Context, err error, toCode ErrorCoder) {
+	code := toCode(err)
+	if code != response.ErrUnknow {
+		c.JSON(http.StatusOK, response.Error(code))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.ErrorUnknown(response.ErrUnknow, err.Error()))
+}

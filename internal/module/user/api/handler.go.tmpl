@@ -1,15 +1,14 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
+	"{{ .Title }}/internal/module/user/api/req"
 	"{{ .Title }}/internal/module/user/api/res"
 	"{{ .Title }}/internal/module/user/application"
-	"{{ .Title }}/internal/module/user/domain"
 	"{{ .Title }}/internal/pkg/response"
 )
 
@@ -25,24 +24,15 @@ func NewHandler(service *application.Service) *Handler {
 
 // Create 创建用户。
 func (h *Handler) Create(c *gin.Context) {
-	var req CreateUserRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var request req.CreateUserRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusOK, response.Error(response.ErrCodeParameter))
 		return
 	}
 
-	result, err := h.service.Create(c.Request.Context(), req.Name, req.Email)
+	result, err := h.service.Create(c.Request.Context(), request.Name, request.Email)
 	if err != nil {
-		switch {
-		case errors.Is(err, application.ErrUserAlreadyExists):
-			c.JSON(http.StatusOK, response.Error(res.ErrUserAlreadyExists))
-		case errors.Is(err, domain.ErrUserNameRequired):
-			c.JSON(http.StatusOK, response.Error(res.ErrUserNameRequired))
-		case errors.Is(err, domain.ErrUserEmailRequired):
-			c.JSON(http.StatusOK, response.Error(res.ErrUserEmailRequired))
-		default:
-			c.JSON(http.StatusOK, response.ErrorUnknown(response.ErrSQL, err.Error()))
-		}
+		writeError(c, err, errorToCode)
 		return
 	}
 
@@ -59,11 +49,7 @@ func (h *Handler) GetByID(c *gin.Context) {
 
 	result, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
-		if errors.Is(err, domain.ErrUserNotFound) {
-			c.JSON(http.StatusOK, response.Error(res.ErrUserNotFound))
-		} else {
-			c.JSON(http.StatusOK, response.ErrorUnknown(response.ErrSQL, err.Error()))
-		}
+		writeError(c, err, errorToCode)
 		return
 	}
 
@@ -77,11 +63,11 @@ func (h *Handler) List(c *gin.Context) {
 
 	list, total, err := h.service.List(c.Request.Context(), page, pageSize)
 	if err != nil {
-		c.JSON(http.StatusOK, response.ErrorUnknown(response.ErrSQL, err.Error()))
+		writeError(c, err, errorToCode)
 		return
 	}
 
-	c.JSON(http.StatusOK, response.Success(&ListUserResponse{
+	c.JSON(http.StatusOK, response.Success(&res.ListUserResponse{
 		List:     toResponseList(list),
 		Total:    total,
 		Page:     page,
@@ -97,24 +83,15 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	var req UpdateUserRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var request req.UpdateUserRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusOK, response.Error(response.ErrCodeParameter))
 		return
 	}
 
-	result, err := h.service.Update(c.Request.Context(), id, req.Name, req.Email)
+	result, err := h.service.Update(c.Request.Context(), id, request.Name, request.Email)
 	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrUserNotFound):
-			c.JSON(http.StatusOK, response.Error(res.ErrUserNotFound))
-		case errors.Is(err, domain.ErrUserNameRequired):
-			c.JSON(http.StatusOK, response.Error(res.ErrUserNameRequired))
-		case errors.Is(err, domain.ErrUserEmailRequired):
-			c.JSON(http.StatusOK, response.Error(res.ErrUserEmailRequired))
-		default:
-			c.JSON(http.StatusOK, response.ErrorUnknown(response.ErrSQL, err.Error()))
-		}
+		writeError(c, err, errorToCode)
 		return
 	}
 
@@ -128,13 +105,9 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.JSON(http.StatusOK, response.Error(response.ErrCodeParameter))
 		return
 	}
-
-	if err := h.service.Delete(c.Request.Context(), id); err != nil {
-		if errors.Is(err, domain.ErrUserNotFound) {
-			c.JSON(http.StatusOK, response.Error(res.ErrUserNotFound))
-		} else {
-			c.JSON(http.StatusOK, response.ErrorUnknown(response.ErrSQL, err.Error()))
-		}
+	err = h.service.Delete(c.Request.Context(), id)
+	if err != nil {
+		writeError(c, err, errorToCode)
 		return
 	}
 

@@ -1,0 +1,13 @@
+package req
+
+// CreateUserRequest 表示创建用户的 HTTP 入参。
+type CreateUserRequest struct {
+	Name  string `json:"name" binding:"required"`
+	Email string `json:"email" binding:"required"`
+}
+
+// UpdateUserRequest 表示更新用户的 HTTP 入参。
+type UpdateUserRequest struct {
+	Name  string `json:"name" binding:"required"`
+	Email string `json:"email" binding:"required"`
+}

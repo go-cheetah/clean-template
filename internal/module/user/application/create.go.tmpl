@@ -1,0 +1,29 @@
+package application
+
+import (
+	"context"
+	"errors"
+	"{{ .Title }}/internal/module/user/domain"
+)
+
+// Create 创建用户。
+func (s *Service) Create(ctx context.Context, name, email string) (*domain.User, error) {
+	existing, err := s.repo.FindByEmail(ctx, email)
+	if err != nil && !errors.Is(err, domain.ErrUserNotFound) {
+		return nil, err
+	}
+	if existing != nil {
+		return nil, ErrUserAlreadyExists
+	}
+
+	user := &domain.User{
+		Name:   name,
+		Email:  email,
+		Status: domain.StatusActive,
+	}
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
+	return s.repo.Save(ctx, user)
+}

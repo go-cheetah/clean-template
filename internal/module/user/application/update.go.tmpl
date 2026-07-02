@@ -1,0 +1,23 @@
+package application
+
+import (
+	"context"
+
+	"{{ .Title }}/internal/module/user/domain"
+)
+
+// Update 更新用户。
+func (s *Service) Update(ctx context.Context, id int64, name, email string) (*domain.User, error) {
+	user, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Name = name
+	user.Email = email
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
+	return s.repo.Update(ctx, user)
+}

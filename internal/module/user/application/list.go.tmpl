@@ -1,0 +1,24 @@
+package application
+
+import (
+	"context"
+
+	"{{ .Title }}/internal/module/user/domain"
+)
+
+// GetByID 查询单个用户。
+func (s *Service) GetByID(ctx context.Context, id int64) (*domain.User, error) {
+	return s.repo.FindByID(ctx, id)
+}
+
+// List 分页查询用户列表。
+func (s *Service) List(ctx context.Context, page, pageSize int) ([]*domain.User, int64, error) {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	return s.repo.List(ctx, page, pageSize)
+}
