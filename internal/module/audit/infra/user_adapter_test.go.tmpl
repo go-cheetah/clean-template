@@ -1,0 +1,44 @@
+package infra
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"{{ .Title }}/internal/module/audit/application"
+	userContract "{{ .Title }}/internal/module/user/contract"
+)
+
+type userContractStub struct {
+	user *userContract.UserInfo
+	err  error
+}
+
+func (s *userContractStub) GetUser(context.Context, int64) (*userContract.UserInfo, error) {
+	return s.user, s.err
+}
+
+func TestUserAdapter(t *testing.T) {
+	t.Parallel()
+
+	adapter := NewUserAdapter(&userContractStub{
+		user: &userContract.UserInfo{ID: 7, Name: "alice"},
+	})
+	got, err := adapter.GetUser(context.Background(), 7)
+	if err != nil {
+		t.Fatalf("GetUser() error = %v", err)
+	}
+	if got.ID != 7 || got.Name != "alice" {
+		t.Fatalf("GetUser() = %#v", got)
+	}
+}
+
+func TestUserAdapterMapsNotFound(t *testing.T) {
+	t.Parallel()
+
+	adapter := NewUserAdapter(&userContractStub{err: userContract.ErrUserNotFound})
+	_, err := adapter.GetUser(context.Background(), 99)
+	if !errors.Is(err, application.ErrUserNotFound) {
+		t.Fatalf("GetUser() error = %v, want %v", err, application.ErrUserNotFound)
+	}
+}

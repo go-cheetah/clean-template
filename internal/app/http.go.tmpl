@@ -7,6 +7,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	auditModule "{{ .Title }}/internal/module/audit"
 	userModule "{{ .Title }}/internal/module/user"
 	"{{ .Title }}/internal/pkg/response"
 
@@ -14,7 +15,7 @@ import (
 )
 
 // registerHTTPRoutes 统一挂载所有 HTTP 路由。
-// 应用层只负责装配和注册，不处理具体业务逻辑。
+// 应用启动层只负责装配和注册，不处理具体业务逻辑。
 func (a *App) registerHTTPRoutes() {
 	a.Gin.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, response.Success("ok"))
@@ -22,9 +23,14 @@ func (a *App) registerHTTPRoutes() {
 
 	v1 := a.Gin.Group("/api/v1")
 
-	userModule.RegisterHTTP(v1, userModule.Dependencies{
-		DB: a.DB.GetDB(),
+	users := userModule.New(userModule.Dependencies{
+		DB:     a.DB.GetDB(),
+		Config: a.Config,
 	})
+	audits := auditModule.New(users.UserReader())
+
+	users.RegisterHTTP(v1)
+	audits.RegisterHTTP(v1)
 
 	a.Gin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }

@@ -8,6 +8,7 @@ import (
 	"{{ .Title }}/internal/module/user/api"
 	userRes "{{ .Title }}/internal/module/user/api/res"
 	"{{ .Title }}/internal/module/user/application"
+	"{{ .Title }}/internal/module/user/contract"
 	"{{ .Title }}/internal/module/user/infra"
 	"{{ .Title }}/internal/pkg/migration"
 )
@@ -18,16 +19,30 @@ type Dependencies struct {
 	Config *config.Config
 }
 
-// RegisterHTTP 装配 user 模块自己的 repo、service、handler，并注册路由。
-func RegisterHTTP(rg *gin.RouterGroup, dep Dependencies) {
-	userRes.RegisterCode()
+// Module 保存 user 模块装配后的内部组件。
+type Module struct {
+	handler *api.Handler
+	reader  contract.UserReader
+}
 
+func New(dep Dependencies) *Module {
 	repo := infra.NewUserRepository(dep.DB)
 	service := application.NewService(repo, dep.Config)
+	return &Module{
+		handler: api.NewHandler(service),
+		reader:  newUserReader(service),
+	}
+}
 
-	handler := api.NewHandler(service)
+// RegisterHTTP 注册 user 模块的 HTTP 入口。
+func (m *Module) RegisterHTTP(rg *gin.RouterGroup) {
+	userRes.RegisterCode()
+	api.RegisterRoutes(rg, m.handler)
+}
 
-	api.RegisterRoutes(rg, handler)
+// UserReader 返回 user 模块对其他模块公开的只读契约。
+func (m *Module) UserReader() contract.UserReader {
+	return m.reader
 }
 
 // RegisterMigrations 注册 user 模块自己的数据库迁移。

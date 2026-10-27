@@ -1,0 +1,27 @@
+package audit
+
+import (
+	"github.com/gin-gonic/gin"
+
+	"{{ .Title }}/internal/module/audit/api"
+	auditRes "{{ .Title }}/internal/module/audit/api/res"
+	"{{ .Title }}/internal/module/audit/application"
+	"{{ .Title }}/internal/module/audit/infra"
+	userContract "{{ .Title }}/internal/module/user/contract"
+)
+
+type Module struct {
+	handler *api.Handler
+}
+
+// New 在模块边界将 user 的公开契约适配成 audit 所需的能力。
+func New(userReader userContract.UserReader) *Module {
+	users := infra.NewUserAdapter(userReader)
+	service := application.NewService(users)
+	return &Module{handler: api.NewHandler(service)}
+}
+
+func (m *Module) RegisterHTTP(rg *gin.RouterGroup) {
+	auditRes.RegisterCode()
+	api.RegisterRoutes(rg, m.handler)
+}

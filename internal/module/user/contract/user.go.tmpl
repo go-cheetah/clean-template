@@ -1,0 +1,21 @@
+// Package contract 定义 user 模块对其他模块公开的稳定协议。
+package contract
+
+import (
+	"context"
+	"errors"
+)
+
+var ErrUserNotFound = errors.New("user not found")
+
+// UserInfo 是允许跨模块传递的最小用户信息。
+// 不要直接向其他模块暴露 core.User。
+type UserInfo struct {
+	ID   int64
+	Name string
+}
+
+// UserReader 是 user 模块对外提供的只读能力。
+type UserReader interface {
+	GetUser(ctx context.Context, id int64) (*UserInfo, error)
+}

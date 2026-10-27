@@ -3,7 +3,7 @@
 一个适合中小型 Go 单体服务的模板，核心思路是：
 
 - 项目顶层按业务模块组织，方便导航和迁移
-- 模块内部按 `api / application / core / infra` 分层
+- 模块内部按 `api / application / core / infra` 分层，按需提供跨模块 `contract`
 - 在 `internal/app` 完成依赖装配，而不是在 handler 里偷拿全局变量
 - 保持清晰的依赖边界，但不过度堆叠架构术语
 
@@ -42,6 +42,12 @@
 │   │   ├── log.go.tmpl
 │   │   └── server.go.tmpl
 │   ├── module
+│   │   ├── audit
+│   │   │   ├── api
+│   │   │   ├── application
+│   │   │   ├── infra
+│   │   │   │   └── user_adapter.go.tmpl
+│   │   │   └── module.go.tmpl
 │   │   └── user
 │   │       ├── api
 │   │       │   ├── dto.go.tmpl
@@ -56,6 +62,8 @@
 │   │       │   ├── user.go.tmpl
 │   │       │   ├── errors.go.tmpl
 │   │       │   └── repository.go.tmpl
+│   │       ├── contract
+│   │       │   └── user.go.tmpl
 │   │       ├── infra
 │   │       │   ├── mapper.go.tmpl
 │   │       │   ├── migrate.go.tmpl
@@ -64,6 +72,7 @@
 │   │       │       └── user.go.tmpl
 │   │       ├── mock
 │   │       │   └── repository.go.tmpl
+│   │       ├── contract.go.tmpl
 │   │       └── module.go.tmpl
 │   └── pkg
 │       ├── migration
@@ -91,12 +100,15 @@
 - `application`：用例编排
 - `core`：核心数据结构、通用规则、仓储接口
 - `infra`：数据库模型、仓储实现、迁移
+- `contract`：仅在跨模块调用时提供稳定接口和 DTO
 - `mock`：面向单元测试的内存版仓储替身
+
+`audit` 模块通过 `user/contract` 获取用户信息，并在自己的 `infra/user_adapter.go` 中完成模型和错误转换。它用于演示模块间只依赖公开契约，不直接引用对方内部实现。
 
 ### 3. 组合根在 `internal/app`
 
 应用启动、依赖注入、路由挂载、迁移注册，都由 `internal/app` 负责。  
-模块只暴露注册函数，不自己偷偷创建全局对象。
+模块通过 `Module` 暴露注册函数和必要契约，不自己创建全局对象。
 
 ### 4. 模板是轻量的
 
@@ -136,9 +148,12 @@ internal/module/server/
 ├── api
 ├── application
 ├── core
+├── contract          # 仅在被其他模块调用时创建
 ├── infra
 ├── mock
 └── module.go
 ```
 
 这样项目级按模块导航，模块内按职责治理，迁移成本会比较低。
+
+更完整的架构使用规则见 [`AGENTS.md`](AGENTS.md)。

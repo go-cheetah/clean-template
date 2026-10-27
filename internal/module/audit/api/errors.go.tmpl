@@ -1,0 +1,21 @@
+package api
+
+import (
+	"errors"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	"{{ .Title }}/internal/module/audit/api/res"
+	"{{ .Title }}/internal/module/audit/application"
+	"{{ .Title }}/internal/pkg/response"
+)
+
+func writeError(c *gin.Context, err error) {
+	if errors.Is(err, application.ErrUserNotFound) {
+		c.JSON(http.StatusOK, response.Error(res.ErrAuditUserNotFound))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.ErrorUnknown(response.ErrUnknow, err.Error()))
+}

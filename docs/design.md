@@ -18,7 +18,7 @@
 
 ```text
 api -> application -> core
-                  -> infra(通过 core 接口解耦)
+infra -----------> application/core
 ```
 
 再展开一点：
@@ -27,9 +27,15 @@ api -> application -> core
 HTTP Request
   -> api/handler
   -> application/service
-  -> core/model + core/repository
-  -> infra/repository_gorm
+  -> core/repository interface
+  -> infra/repository_gorm implementation
   -> database
+```
+
+跨模块调用使用提供方公开的 `contract`，并由消费方的 `infra` 负责适配：
+
+```text
+audit/application <- audit/infra/user_adapter -> user/contract
 ```
 
 ## 为什么这样设计
@@ -54,6 +60,7 @@ HTTP Request
 - `application`
 - `core`
 - `infra`
+- `contract`（仅在存在跨模块消费者时）
 
 ### 3. 把装配职责放回启动层
 
@@ -67,10 +74,16 @@ internal/
 ├── app/                # 启动、装配、迁移、路由挂载
 ├── config/             # 配置结构
 ├── module/             # 业务模块
+│   ├── audit/
+│   │   ├── api/
+│   │   ├── application/
+│   │   ├── infra/
+│   │   └── module.go
 │   └── user/
 │       ├── api/
 │       ├── application/
 │       ├── core/
+│       ├── contract/
 │       ├── infra/
 │       └── module.go
 └── pkg/                # 内部共享小能力，例如 response、migration
@@ -101,6 +114,19 @@ internal/
 - 实现仓储接口
 - 放 GORM 模型
 - 放 mapper 和迁移
+- 适配其他模块公开的 contract
+
+### contract
+
+- 定义本模块对其他模块公开的最小接口和 DTO
+- 不暴露 core 类型、数据库模型和框架类型
+- 没有跨模块消费者时不创建
+
+## 跨模块示例
+
+`user` 模块通过 `UserReader` contract 提供最小用户信息。`audit` 模块不直接引用 user 的 application、core 或 infra，而是在自己的 infra 中将该 contract 适配为 application 所需的 `UserReader`。
+
+两个模块由 `internal/app` 创建和连接，因此模块内部不需要全局变量，也不负责寻找自己的外部依赖。
 
 ## 模板使用建议
 

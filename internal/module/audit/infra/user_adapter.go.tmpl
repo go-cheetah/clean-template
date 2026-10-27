@@ -1,0 +1,35 @@
+package infra
+
+import (
+	"context"
+	"errors"
+
+	"{{ .Title }}/internal/module/audit/application"
+	userContract "{{ .Title }}/internal/module/user/contract"
+)
+
+type userAdapter struct {
+	reader userContract.UserReader
+}
+
+var _ application.UserReader = (*userAdapter)(nil)
+
+// NewUserAdapter 把 user 模块的公开契约适配成 audit 应用层需要的接口。
+func NewUserAdapter(reader userContract.UserReader) application.UserReader {
+	return &userAdapter{reader: reader}
+}
+
+func (a *userAdapter) GetUser(ctx context.Context, id int64) (*application.User, error) {
+	user, err := a.reader.GetUser(ctx, id)
+	if err != nil {
+		if errors.Is(err, userContract.ErrUserNotFound) {
+			return nil, application.ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return &application.User{
+		ID:   user.ID,
+		Name: user.Name,
+	}, nil
+}

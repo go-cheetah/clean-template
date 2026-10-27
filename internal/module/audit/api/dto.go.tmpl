@@ -1,0 +1,14 @@
+package api
+
+import (
+	"{{ .Title }}/internal/module/audit/api/res"
+	"{{ .Title }}/internal/module/audit/application"
+)
+
+func toResponse(entry *application.Entry) *res.EntryResponse {
+	return &res.EntryResponse{
+		UserID:   entry.UserID,
+		UserName: entry.UserName,
+		Action:   entry.Action,
+	}
+}

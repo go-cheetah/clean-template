@@ -1,0 +1,35 @@
+package user
+
+import (
+	"context"
+	"errors"
+
+	"{{ .Title }}/internal/module/user/application"
+	"{{ .Title }}/internal/module/user/contract"
+	"{{ .Title }}/internal/module/user/core"
+)
+
+type userReader struct {
+	service *application.Service
+}
+
+var _ contract.UserReader = (*userReader)(nil)
+
+func newUserReader(service *application.Service) contract.UserReader {
+	return &userReader{service: service}
+}
+
+func (r *userReader) GetUser(ctx context.Context, id int64) (*contract.UserInfo, error) {
+	user, err := r.service.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, core.ErrUserNotFound) {
+			return nil, contract.ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return &contract.UserInfo{
+		ID:   user.ID,
+		Name: user.Name,
+	}, nil
+}

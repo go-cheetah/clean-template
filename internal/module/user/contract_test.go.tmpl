@@ -1,0 +1,35 @@
+package user
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"{{ .Title }}/internal/module/user/application"
+	"{{ .Title }}/internal/module/user/contract"
+	userMock "{{ .Title }}/internal/module/user/mock"
+)
+
+func TestUserReaderContract(t *testing.T) {
+	t.Parallel()
+
+	service := application.NewService(userMock.NewUserRepository(), nil)
+	created, err := service.Create(context.Background(), "alice", "alice@example.com")
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	reader := newUserReader(service)
+	got, err := reader.GetUser(context.Background(), created.ID)
+	if err != nil {
+		t.Fatalf("GetUser() error = %v", err)
+	}
+	if got.ID != created.ID || got.Name != created.Name {
+		t.Fatalf("GetUser() = %#v", got)
+	}
+
+	_, err = reader.GetUser(context.Background(), created.ID+1)
+	if !errors.Is(err, contract.ErrUserNotFound) {
+		t.Fatalf("GetUser() error = %v, want %v", err, contract.ErrUserNotFound)
+	}
+}

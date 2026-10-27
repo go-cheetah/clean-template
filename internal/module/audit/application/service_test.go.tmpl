@@ -1,0 +1,27 @@
+package application
+
+import (
+	"context"
+	"testing"
+)
+
+type userReaderStub struct {
+	user *User
+}
+
+func (s *userReaderStub) GetUser(context.Context, int64) (*User, error) {
+	return s.user, nil
+}
+
+func TestServiceGetUserAccess(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(&userReaderStub{user: &User{ID: 7, Name: "alice"}})
+	entry, err := service.GetUserAccess(context.Background(), 7)
+	if err != nil {
+		t.Fatalf("GetUserAccess() error = %v", err)
+	}
+	if entry.UserID != 7 || entry.UserName != "alice" || entry.Action != "read_user" {
+		t.Fatalf("GetUserAccess() = %#v", entry)
+	}
+}

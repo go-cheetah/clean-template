@@ -1,0 +1,9 @@
+package res
+
+import "{{ .Title }}/internal/pkg/response"
+
+const ErrAuditUserNotFound = 11001
+
+func RegisterCode() {
+	response.Register(ErrAuditUserNotFound, "审计用户不存在")
+}
