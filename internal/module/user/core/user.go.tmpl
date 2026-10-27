@@ -1,4 +1,4 @@
-package domain
+package core
 
 import "time"
 
@@ -11,7 +11,7 @@ const (
 	StatusDeleted  Status = 2
 )
 
-// User 是 user 模块的领域实体。
+// User 是 user 模块的核心数据结构。
 // 这里不关心 HTTP、数据库模型、GORM 标签等技术细节。
 type User struct {
 	ID        int64

@@ -82,7 +82,7 @@ if err != nil {
 	switch {
 	case errors.Is(err, application.ErrUserAlreadyExists):
 		c.JSON(http.StatusOK, response.Error(res.ErrUserAlreadyExists))
-	case errors.Is(err, domain.ErrUserNameRequired):
+	case errors.Is(err, core.ErrUserNameRequired):
 		c.JSON(http.StatusOK, response.Error(res.ErrUserNameRequired))
 	default:
 		c.JSON(http.StatusOK, response.ErrorUnknown(response.ErrSQL, err.Error()))

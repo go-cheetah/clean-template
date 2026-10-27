@@ -2,10 +2,10 @@ package api
 
 import (
 	"{{ .Title }}/internal/module/user/api/res"
-	"{{ .Title }}/internal/module/user/domain"
+	"{{ .Title }}/internal/module/user/core"
 )
 
-func toResponse(u *domain.User) *res.UserResponse {
+func toResponse(u *core.User) *res.UserResponse {
 	return &res.UserResponse{
 		ID:     u.ID,
 		Name:   u.Name,
@@ -14,7 +14,7 @@ func toResponse(u *domain.User) *res.UserResponse {
 	}
 }
 
-func toResponseList(users []*domain.User) []*res.UserResponse {
+func toResponseList(users []*core.User) []*res.UserResponse {
 	result := make([]*res.UserResponse, len(users))
 	for i, user := range users {
 		result[i] = toResponse(user)

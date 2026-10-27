@@ -3,16 +3,16 @@
 一个适合中小型 Go 单体服务的模板，核心思路是：
 
 - 项目顶层按业务模块组织，方便导航和迁移
-- 模块内部按 `api / application / domain / infra` 分层
+- 模块内部按 `api / application / core / infra` 分层
 - 在 `internal/app` 完成依赖装配，而不是在 handler 里偷拿全局变量
-- 保留足够轻量的 DDD / Clean 思想，但不过度堆术语
+- 保持清晰的依赖边界，但不过度堆叠架构术语
 
 ## 适用场景
 
 - 想保留单体应用的简单部署方式
 - 业务模块较多，希望代码能按模块收口
 - 希望比传统 MVC 更好测、更好维护
-- 不想一上来就引入很重的 DDD 仪式感
+- 希望采用简洁、清晰的功能分层
 
 ## 目录结构
 
@@ -52,8 +52,8 @@
 │   │       ├── application
 │   │       │   ├── errors.go.tmpl
 │   │       │   └── service.go.tmpl
-│   │       ├── domain
-│   │       │   ├── entity.go.tmpl
+│   │       ├── core
+│   │       │   ├── user.go.tmpl
 │   │       │   ├── errors.go.tmpl
 │   │       │   └── repository.go.tmpl
 │   │       ├── infra
@@ -89,7 +89,7 @@
 
 - `api`：HTTP 入参、出参、handler、路由
 - `application`：用例编排
-- `domain`：业务实体、规则、仓储接口
+- `core`：核心数据结构、通用规则、仓储接口
 - `infra`：数据库模型、仓储实现、迁移
 - `mock`：面向单元测试的内存版仓储替身
 
@@ -100,8 +100,8 @@
 
 ### 4. 模板是轻量的
 
-这个模板不会强制你给每个动作都建一层，也不会要求你把值对象、领域事件一口气全上。  
-先把边界立住，比术语更重要。
+这个模板不会强制为每个动作增加抽象层。
+先按功能划清边界，再根据复杂度逐步拆分。
 
 ### 5. 返回值和错误码统一
 
@@ -135,7 +135,7 @@ cmd/app/main.go
 internal/module/server/
 ├── api
 ├── application
-├── domain
+├── core
 ├── infra
 ├── mock
 └── module.go

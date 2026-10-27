@@ -2,11 +2,11 @@
 
 ## 架构定位
 
-这不是纯 MVC，也不是教科书式的重 DDD。  
-它更接近一种：
+这不是纯 MVC，也不强调业务领域建模。
+它采用的是：
 
 - 模块化单体
-- 模块内轻量 Clean / DDD 分层
+- 模块内简洁的功能分层
 
 可以把它理解成：
 
@@ -17,8 +17,8 @@
 单个模块内部的推荐依赖方向如下：
 
 ```text
-api -> application -> domain
-                  -> infra(通过 domain 接口解耦)
+api -> application -> core
+                  -> infra(通过 core 接口解耦)
 ```
 
 再展开一点：
@@ -27,7 +27,7 @@ api -> application -> domain
 HTTP Request
   -> api/handler
   -> application/service
-  -> domain/entity + domain/repository
+  -> core/model + core/repository
   -> infra/repository_gorm
   -> database
 ```
@@ -52,7 +52,7 @@ HTTP Request
 
 - `api`
 - `application`
-- `domain`
+- `core`
 - `infra`
 
 ### 3. 把装配职责放回启动层
@@ -70,7 +70,7 @@ internal/
 │   └── user/
 │       ├── api/
 │       ├── application/
-│       ├── domain/
+│       ├── core/
 │       ├── infra/
 │       └── module.go
 └── pkg/                # 内部共享小能力，例如 response、migration
@@ -88,12 +88,12 @@ internal/
 
 - 编排一个完整用例
 - 处理流程顺序和默认值
-- 调用领域对象和仓储接口
+- 调用核心模型和仓储接口
 
-### domain
+### core
 
-- 定义实体
-- 放核心规则
+- 定义核心数据结构
+- 放与技术设施无关的通用规则
 - 定义仓储接口
 
 ### infra
@@ -115,5 +115,5 @@ internal/
 
 ### 模块复杂时
 
-当单个模块越来越大，就逐步把业务规则沉到 `domain`。  
-不要一开始为了“像 DDD”而生搬硬套。
+当单个模块越来越大，就逐步把稳定的模型和规则沉到 `core`。
+不要为了形式增加不必要的抽象。

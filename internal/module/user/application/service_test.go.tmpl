@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"{{ .Title }}/internal/module/user/domain"
+	"{{ .Title }}/internal/module/user/core"
 	userMock "{{ .Title }}/internal/module/user/mock"
 )
 
@@ -21,8 +21,8 @@ func TestServiceCreateAndGetByID(t *testing.T) {
 	if created.ID == 0 {
 		t.Fatalf("Create() id = 0, want non-zero")
 	}
-	if created.Status != domain.StatusActive {
-		t.Fatalf("Create() status = %v, want %v", created.Status, domain.StatusActive)
+	if created.Status != core.StatusActive {
+		t.Fatalf("Create() status = %v, want %v", created.Status, core.StatusActive)
 	}
 
 	got, err := service.GetByID(context.Background(), created.ID)
@@ -78,8 +78,8 @@ func TestServiceUpdateAndDelete(t *testing.T) {
 	}
 
 	_, err = service.GetByID(context.Background(), created.ID)
-	if !errors.Is(err, domain.ErrUserNotFound) {
-		t.Fatalf("GetByID() after Delete() error = %v, want %v", err, domain.ErrUserNotFound)
+	if !errors.Is(err, core.ErrUserNotFound) {
+		t.Fatalf("GetByID() after Delete() error = %v, want %v", err, core.ErrUserNotFound)
 	}
 }
 

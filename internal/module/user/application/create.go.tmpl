@@ -3,23 +3,23 @@ package application
 import (
 	"context"
 	"errors"
-	"{{ .Title }}/internal/module/user/domain"
+	"{{ .Title }}/internal/module/user/core"
 )
 
 // Create 创建用户。
-func (s *Service) Create(ctx context.Context, name, email string) (*domain.User, error) {
+func (s *Service) Create(ctx context.Context, name, email string) (*core.User, error) {
 	existing, err := s.repo.FindByEmail(ctx, email)
-	if err != nil && !errors.Is(err, domain.ErrUserNotFound) {
+	if err != nil && !errors.Is(err, core.ErrUserNotFound) {
 		return nil, err
 	}
 	if existing != nil {
 		return nil, ErrUserAlreadyExists
 	}
 
-	user := &domain.User{
+	user := &core.User{
 		Name:   name,
 		Email:  email,
-		Status: domain.StatusActive,
+		Status: core.StatusActive,
 	}
 	if err := user.Validate(); err != nil {
 		return nil, err

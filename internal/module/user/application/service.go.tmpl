@@ -2,7 +2,7 @@ package application
 
 import (
 	"{{ .Title }}/internal/config"
-	"{{ .Title }}/internal/module/user/domain"
+	"{{ .Title }}/internal/module/user/core"
 )
 
 // 把业务进行拆分，方式过大的，导致上帝service的出现
@@ -10,11 +10,11 @@ import (
 // Service 表示 user 模块的应用层服务。
 // 它负责组织用例流程，不直接关心 GORM 等实现细节。
 type Service struct {
-	repo   domain.UserRepository
+	repo   core.UserRepository
 	Config *config.Config
 }
 
-func NewService(repo domain.UserRepository, conf *config.Config) *Service {
+func NewService(repo core.UserRepository, conf *config.Config) *Service {
 	return &Service{
 		repo:   repo,
 		Config: conf,

@@ -8,7 +8,7 @@ import (
 
 	"{{ .Title }}/internal/module/user/api/res"
 	"{{ .Title }}/internal/module/user/application"
-	"{{ .Title }}/internal/module/user/domain"
+	"{{ .Title }}/internal/module/user/core"
 	"{{ .Title }}/internal/pkg/response"
 )
 
@@ -19,11 +19,11 @@ func errorToCode(err error) (code int) {
 		switch {
 		case errors.Is(err, application.ErrUserAlreadyExists):
 			return res.ErrUserAlreadyExists
-		case errors.Is(err, domain.ErrUserNotFound):
+		case errors.Is(err, core.ErrUserNotFound):
 			return res.ErrUserNotFound
-		case errors.Is(err, domain.ErrUserNameRequired):
+		case errors.Is(err, core.ErrUserNameRequired):
 			return res.ErrUserNameRequired
-		case errors.Is(err, domain.ErrUserEmailRequired):
+		case errors.Is(err, core.ErrUserEmailRequired):
 			return res.ErrUserEmailRequired
 		default:
 			return response.ErrUnknow

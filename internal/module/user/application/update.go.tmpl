@@ -3,11 +3,11 @@ package application
 import (
 	"context"
 
-	"{{ .Title }}/internal/module/user/domain"
+	"{{ .Title }}/internal/module/user/core"
 )
 
 // Update 更新用户。
-func (s *Service) Update(ctx context.Context, id int64, name, email string) (*domain.User, error) {
+func (s *Service) Update(ctx context.Context, id int64, name, email string) (*core.User, error) {
 	user, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		return nil, err

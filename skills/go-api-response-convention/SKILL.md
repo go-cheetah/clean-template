@@ -28,7 +28,7 @@ description: 当 Go 服务需要统一 API 返回结构和模块级错误码约�
 3. 在 `api/res` 下新增或更新模块级错误码。
 4. 先让 handler 直接返回 `response.Success`、`response.Error` 或 `response.ErrorUnknown`。
 5. 在模块 HTTP 注册入口里注册模块错误码。
-6. 如果 domain/application 层还是字符串错误，先引入导出的哨兵错误，再接响应码。
+6. 如果 core/application 层还是字符串错误，先引入导出的哨兵错误，再接响应码。
 7. 只有在多个 handler 重复同一套错误翻译时，才考虑新增独立 mapper。
 8. 格式化变更文件，并在可能的情况下执行最小必要验证。
 

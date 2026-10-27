@@ -19,7 +19,7 @@ internal/
         │   └── routes.go
         ├── application/
         │   └── errors.go
-        └── domain/
+        └── core/
             └── errors.go
 ```
 
@@ -27,7 +27,7 @@ internal/
 
 - `internal/pkg/response`
   公共响应结构、公共错误码、注册表和通用辅助函数。
-- `domain/errors.go`
+- `core/errors.go`
   业务事实类错误，例如不存在、状态非法、必填字段缺失。
 - `application/errors.go`
   用例层错误，例如资源重复、业务冲突。
